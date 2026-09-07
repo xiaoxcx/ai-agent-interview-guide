@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>企业级 AI Agent 控制台</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">AI</span>
+        <div class="brand-text">
+          <h1>企业级 AI Agent 控制台</h1>
+          <p id="healthSummary" class="sub">正在检测服务状态…</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <label class="base-input">
+          <span>API Base</span>
+          <input id="apiBase" type="text" spellcheck="false" />
+        </label>
+        <span id="statusDot" class="dot dot-unknown" title="服务状态"></span>
+      </div>
+    </header>
+
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="health">健康检查</button>
+      <button class="tab" data-tab="chat">对话</button>
+      <button class="tab" data-tab="stream">流式对话</button>
+      <button class="tab" data-tab="upload">文档上传</button>
+      <button class="tab" data-tab="docs">文档列表</button>
+    </nav>
+
+    <main class="container">
+      <!-- 健康检查 -->
+      <section class="panel active" data-panel="health">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>服务健康状态</h2>
+              <p class="hint">对应接口：<code>GET /health</code>、<code>GET /health/ready</code></p>
+            </div>
+            <div class="btn-group">
+              <button class="btn" id="btnHealth">存活检查</button>
+              <button class="btn btn-primary" id="btnReady">就绪检查</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" id="healthStats">
+            <div class="stat">
+              <span class="stat-label">应用状态</span>
+              <span class="stat-value" id="statApp">-</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">数据库</span>
+              <span class="stat-value" id="statDb">-</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">运行环境</span>
+              <span class="stat-value" id="statEnv">-</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">响应耗时</span>
+              <span class="stat-value" id="statLatency">-</span>
+            </div>
+          </div>
+
+          <div class="result">
+            <div class="result-head">
+              <span>原始响应</span>
+              <span class="badge" id="healthStatus">-</span>
+            </div>
+            <pre id="healthRaw" class="code">点击上方按钮开始检测</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- 非流式对话 -->
+      <section class="panel" data-panel="chat">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>非流式对话</h2>
+              <p class="hint">对应接口：<code>POST /chat</code>（意图识别 → 模型路由 → 完整返回）</p>
+            </div>
+            <button class="btn btn-ghost" id="btnChatClear">清空会话</button>
+          </div>
+
+          <div class="chat-window" id="chatWindow">
+            <div class="empty">发送消息开始对话</div>
+          </div>
+
+          <div class="params">
+            <label class="field">
+              <span>模型（留空用默认）</span>
+              <input type="text" id="chatModel" placeholder="deepseek-chat" />
+            </label>
+            <label class="field">
+              <span>temperature <b id="chatTempVal">0.7</b></span>
+              <input type="range" id="chatTemp" min="0" max="2" step="0.1" value="0.7" />
+            </label>
+            <label class="field field-sm">
+              <span>max_tokens</span>
+              <input type="number" id="chatMaxTokens" min="1" placeholder="不限" />
+            </label>
+          </div>
+
+          <div class="composer">
+            <textarea id="chatInput" rows="3" placeholder="输入消息，Ctrl + Enter 发送"></textarea>
+            <div class="composer-actions">
+              <span class="hint" id="chatMeta">0 条上下文</span>
+              <button class="btn btn-primary" id="btnChatSend">发送</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 流式对话 -->
+      <section class="panel" data-panel="stream">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>流式对话（SSE）</h2>
+              <p class="hint">对应接口：<code>POST /chat/stream</code>，逐段返回 <code>data: {...}</code></p>
+            </div>
+            <button class="btn btn-ghost" id="btnStreamClear">清空</button>
+          </div>
+
+          <div class="chat-window" id="streamWindow">
+            <div class="empty">发送消息，回复将以打字机效果呈现</div>
+          </div>
+
+          <div class="params">
+            <label class="field">
+              <span>模型（留空用默认）</span>
+              <input type="text" id="streamModel" placeholder="deepseek-chat" />
+            </label>
+            <label class="field">
+              <span>temperature <b id="streamTempVal">0.7</b></span>
+              <input type="range" id="streamTemp" min="0" max="2" step="0.1" value="0.7" />
+            </label>
+            <label class="field field-sm">
+              <span>max_tokens</span>
+              <input type="number" id="streamMaxTokens" min="1" placeholder="不限" />
+            </label>
+          </div>
+
+          <div class="composer">
+            <textarea id="streamInput" rows="3" placeholder="输入消息，Ctrl + Enter 发送"></textarea>
+            <div class="composer-actions">
+              <span class="hint" id="streamMeta">等待发送</span>
+              <button class="btn btn-primary" id="btnStreamSend">流式发送</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 文档上传 -->
+      <section class="panel" data-panel="upload">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>文档上传与分块</h2>
+              <p class="hint">对应接口：<code>POST /documents/upload</code>（解析 → 分块 → 入库，需数据库）</p>
+            </div>
+          </div>
+
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="fileInput" hidden />
+            <div class="dropzone-inner">
+              <div class="dropzone-icon">↑</div>
+              <p>拖拽文件到此处，或</p>
+              <button class="btn" id="btnPickFile" type="button">选择文件</button>
+              <p class="hint" id="fileName">尚未选择文件</p>
+            </div>
+          </div>
+
+          <div class="progress" id="progressWrap" hidden>
+            <div class="progress-bar"><div class="progress-inner" id="progressInner"></div></div>
+            <span class="hint" id="progressText">0%</span>
+          </div>
+
+          <div class="composer-actions">
+            <span class="hint">上传后会返回 document_id 与 chunk_count</span>
+            <button class="btn btn-primary" id="btnUpload" disabled>开始上传</button>
+          </div>
+
+          <div class="result">
+            <div class="result-head">
+              <span>上传结果</span>
+              <span class="badge" id="uploadStatus">-</span>
+            </div>
+            <pre id="uploadRaw" class="code">尚未上传</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- 文档列表 -->
+      <section class="panel" data-panel="docs">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>已入库文档</h2>
+              <p class="hint">对应接口：<code>GET /documents</code>（需数据库）</p>
+            </div>
+            <button class="btn btn-primary" id="btnRefreshDocs">刷新列表</button>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>文件名</th>
+                  <th>类型</th>
+                  <th>状态</th>
+                  <th>创建时间</th>
+                  <th>Document ID</th>
+                </tr>
+              </thead>
+              <tbody id="docsBody">
+                <tr><td colspan="5" class="empty-row">点击「刷新列表」加载数据</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="result">
+            <div class="result-head">
+              <span>原始响应</span>
+              <span class="badge" id="docsStatus">-</span>
+            </div>
+            <pre id="docsRaw" class="code">-</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" hidden></div>
+    <script src="./app.js"></script>
+  </body>
+</html>

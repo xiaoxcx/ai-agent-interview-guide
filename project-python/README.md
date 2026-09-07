@@ -56,6 +56,8 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 4. 访问健康检查：<http://127.0.0.1:8000/api/v1/health>
 
+5. 打开内置前端控制台：<http://127.0.0.1:8000/ui/>（根路径 `/` 会自动跳转）。控制台按 Tab 覆盖全部接口：健康检查、非流式对话、流式对话（SSE）、文档上传、文档列表。前端为原生 HTML/CSS/JS，源码位于 `app/web/`，由 FastAPI 通过 `StaticFiles` 同源托管，无需单独构建。
+
 ### Docker Compose
 
 在项目根目录准备 `.env`（可由 `.env.example` 复制），然后：
